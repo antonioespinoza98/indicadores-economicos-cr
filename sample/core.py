@@ -8,9 +8,9 @@
 import configparser
 import requests
 import os
-from dotenv import load_dotenv
-import polars
-from sample.utils import TOKEN
+from sample.utils import logger
+
+get_logger = logger("Core", "core.log")
 class BccrAPI:
     """
     Clase que se encarga de la captura de datos económicos del Banco Central de Costa Rica (BCCR).
@@ -36,13 +36,15 @@ class BccrAPI:
         """
         config = configparser.ConfigParser()
         config.read(os.path.dirname(__file__) + '/conf.ini')
+        get_logger.info("Leyendo los credenciales del archivo conf.ini")
         self.url = config.get(API, 'url')
         self.endpoint = config.get(API, 'endpoint')
-        self.header = {"authorization": f"Bearer {TOKEN}",
+        self.token = config.get(API, 'token')
+        self.header = {"authorization": f"Bearer {self.token}",
                         "Content-Type": "application/json",
                           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
                           }
-
+        get_logger.info("Credenciales cargados con éxito!")
     def get(self):
         """
         Envía una solicitud GET
@@ -54,6 +56,6 @@ class BccrAPI:
         """
         response = requests.get(self.url + self.endpoint, headers= self.header)
         if response.status_code == 200:
-            print("Funcioné!")
+            get_logger.info("Finalizó")
         else: 
-            print(f"Error: {response.status_code}")
+            get_logger.error(f"Error: {response.status_code}")
