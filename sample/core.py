@@ -51,7 +51,7 @@ class BccrAPI:
         self.session = session or requests.Session()
 
         # Cargar conf.ini
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(interpolation=None)
         if conf_path is None: # Busca un archivo estándar llamado conf.ini
             conf_path = Path(__file__).resolve().parent / "conf.ini"
         else:
