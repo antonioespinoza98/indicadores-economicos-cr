@@ -209,3 +209,5 @@ __marimo__/
 tokens.txt
 *.xlsx
 *.ini
+
+/BCCR-tracking

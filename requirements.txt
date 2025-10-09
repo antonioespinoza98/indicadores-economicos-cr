@@ -4,3 +4,4 @@ polars
 numpy
 pymupdf
 fastexcel[pandas,polars]
+xlsxwriter

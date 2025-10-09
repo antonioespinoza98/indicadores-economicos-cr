@@ -147,6 +147,6 @@ class BccrAPI:
                 get_logger.error("No se pudo parsear JSON desde %s: %s", url, e)
                 raise
             get_logger.debug("Respuesta JSON recibida correctamente.")
-            return data
+            return pl.DataFrame(data=data["datos"][0]["series"], schema=["fecha","valorDatoPorPeriodo"])
         get_logger.warning("Contenido no JSON recibido (%s)", ctype)
         return pl.read_excel(response.content, read_options={"header_row": 1})
