@@ -5,3 +5,5 @@ numpy
 pymupdf
 fastexcel[pandas,polars]
 xlsxwriter
+pydantic
+pandera[polars]

@@ -172,3 +172,12 @@ class BccrAPI:
             return pl.DataFrame(data=data["datos"][0]["series"], schema=["fecha","valorDatoPorPeriodo"])
         get_logger.warning("Contenido no JSON recibido (%s)", ctype)
         return pl.read_excel(response.content, read_options={"header_row": 1})
+    
+class Orquestador:
+    def __init__(self):
+        pass
+    
+    def readParquet(
+        file: str    
+    ):
+        data= pl.read_parquet(file)
