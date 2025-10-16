@@ -13,6 +13,8 @@ from pathlib import Path
 from urllib.parse import urljoin
 from typing import Any, Dict, Optional
 import polars as pl
+from datetime import datetime
+
 get_logger = logger("Core", "core.log")
 class BccrAPI:
     """
@@ -31,11 +33,16 @@ class BccrAPI:
         Extrae la tabla de indicadores económicos 
     """
 
-    KEYS = ("url", "endpoint", "token")
+    KEYS = ("url", "token")
 
     def __init__(
             self,
             api_name: str,
+            # Prueba de parametros
+            indicador: str,
+            fecha_inicio: str,
+            fecha_final: str,  
+            #-----------------------
             conf_path: Optional[os.PathLike[str] | str] = None, 
             timeout: float = 20.0,
             session: Optional[requests.Session] = None,
@@ -48,6 +55,11 @@ class BccrAPI:
         """
         self.api_name = api_name
         self.timeout = timeout
+        # ---- PARAMETROS NUEVOS
+        self.indicador = indicador
+        self.fecha_inicio = fecha_inicio
+        self.fecha_final = fecha_final
+        # -----------------------
         self.session = session or requests.Session()
 
         # Cargar conf.ini
@@ -81,11 +93,21 @@ class BccrAPI:
         # Una vez cargados, asignamos los atributos al self para poder llamarlos en las funciones
 
         self.base_url = config.get(api_name, "url")
-        self.default_endpoint = config.get(api_name, "endpoint")
+        # self.default_endpoint = config.get(api_name, "endpoint")
+        # TRANSFORMACION DE LA FECHA ----------
+        self.fecha_inicio= datetime.strptime(self.fecha_inicio, '%d/%m/%Y').date()
+        self.fecha_final= datetime.strptime(self.fecha_final, '%d/%m/%Y').date()
+
+        self.mes_inicio=self.fecha_inicio.strftime("%m")
+        self.dia_inicio=self.fecha_inicio.strftime("%d")
+
+        self.mes_final=self.fecha_final.strftime("%m")
+        self.dia_final=self.fecha_final.strftime("%d")
+        # -------------------------------------
+        self.default_endpoint = f"SDDE/api/Bccr.GE.SDDE.Publico.Indicadores.API/indicadoresEconomicos/{self.indicador}/series?fechaInicio={self.fecha_inicio.year}%2F{self.mes_inicio}%2F{self.dia_inicio}&fechaFin={self.fecha_final.year}%2F{self.mes_final}%2F{self.dia_final}&idioma=es"
         self._token = config.get(api_name, "token")
 
         # Encabezados
-
         self.headers: Dict[str, str] = {
             "Authorization": f"Bearer {self._token}",
             "Content-Type": "application/json",
