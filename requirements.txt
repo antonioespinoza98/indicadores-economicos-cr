@@ -7,3 +7,6 @@ fastexcel[pandas,polars]
 xlsxwriter
 pydantic
 pandera[polars]
+SQLAlchemy
+psycopg2
+connectorx

@@ -14,6 +14,7 @@ from urllib.parse import urljoin
 from typing import Any, Dict, Optional
 import polars as pl
 from datetime import datetime
+from uuid import uuid4
 
 get_logger = logger("Core", "core.log")
 class BccrAPI:
@@ -169,15 +170,33 @@ class BccrAPI:
                 get_logger.error("No se pudo parsear JSON desde %s: %s", url, e)
                 raise
             get_logger.debug("Respuesta JSON recibida correctamente.")
-            return pl.DataFrame(data=data["datos"][0]["series"], schema=["fecha","valorDatoPorPeriodo"])
+            # -- Transformación de los datos para también incluir el codigo del indicador y el nombre
+            indicador= data["datos"][0]
+            series= indicador["series"]
+
+            data1 = pl.DataFrame(data=series,
+                                 schema=["fecha","valorDatoPorPeriodo"]).with_columns([
+                                     pl.lit(indicador["codigoIndicador"]).alias("codigo_indicador"),
+                                     pl.lit(indicador["nombreIndicador"]).alias("nombre_indicador")
+                                 ])
+            
+            data1 = (
+                data1
+                .with_columns([
+                    pl.lit(str(uuid4())).alias("ingestion_run_id"),     
+                    
+                ])
+                .with_columns([
+                    pl.col("fecha").str.strptime(pl.Date, strict=False),   
+                    pl.col("valorDatoPorPeriodo").cast(pl.Float64),        
+                ])
+            )
+
+            data1.write_database(table_name="bccr_sch.indicador_crudo",
+                                  connection= "postgresql://mespinoza:mespinoza@127.0.0.1:5433/crudo_db",
+                                  if_table_exists='append',
+                                  engine= 'sqlalchemy')
+        
+            return print("pipeline completada")
         get_logger.warning("Contenido no JSON recibido (%s)", ctype)
         return pl.read_excel(response.content, read_options={"header_row": 1})
-    
-class Orquestador:
-    def __init__(self):
-        pass
-    
-    def readParquet(
-        file: str    
-    ):
-        data= pl.read_parquet(file)
