@@ -1,30 +1,26 @@
 import streamlit as st
 import polars as pl
-
+import plotly.express as px
 st.set_page_config(layout="wide")
 
+
+# --- CONEXION CON LA BASE DE DATOS ---
 conn = st.connection("postgresql", type="sql")
 
+# TABLAS DIMENSIONALES Y DE HECHOS
 dim_fecha_qr = conn.query('SELECT * FROM curado_sch.dim_fecha;', ttl="10m")
 fct_indicador_qr = conn.query('SELECT * FROM curado_sch.fct_indicador;', ttl="10m")
 mart_balanza = conn.query('SELECT * FROM mart_sch.m_balanzapagostrim;', ttl="10m")
+
 # INDICADORES
 dim_indicador_qr = conn.query('SELECT indicador_key,nombre_indicador,descripcion_indicador,periodicidad FROM curado_sch.dim_indicador;', ttl="10m")
+# --- FIN --- 
 
 
-
+# --- TRANSFORMACIONES ---
 dim_fecha = pl.DataFrame(dim_fecha_qr)
 fct_indicador = pl.DataFrame(fct_indicador_qr)
 dim_indicador = pl.DataFrame(dim_indicador_qr)
-
-#1era transformacion
-desc_ind = dim_indicador.join(fct_indicador, how="inner", on="indicador_key")
-
-desc_ind = desc_ind.filter(
-    pl.col("nombre_indicador").is_in(["Bienes y servicios",
-                                        "Ingreso primario",
-                                        "Ingreso secundario"])
-                                        )
 
 # 2da transformacion
 BalanzaDePagosTrim = fct_indicador.join(dim_fecha, how="left", on="date_key")
@@ -39,46 +35,67 @@ BalanzaDePagosTrim =(
 
 
 
+q= "SELECT * FROM curado_sch.fct_indicador"
+q1= "SELECT * FROM curado_sch.dim_indicador"
+uri = "postgresql://mespinoza:mespinoza@127.0.0.1:5433/crudo_db"
 
+fct_indicador= pl.read_database_uri(query=q, uri=uri, engine='connectorx')
+dim_indicador= pl.read_database_uri(query=q1, uri=uri, engine='connectorx')
+
+
+mrt_cuenta_ind = (
+    fct_indicador.join(
+        other=dim_indicador,
+        on="indicador_key",
+        how="left"
+    )
+    .select("nombre_indicador")
+    .unique()
+    .to_series()
+)
+
+# ---
 st.title("Indicadores Económicos")
 
-st.selectbox(
+select_box=st.selectbox(
     "Seleccione una tabla para visualizar",
-    ("Balance de la cuenta corriente")
+    options=mrt_cuenta_ind
 )
 
 st.header("Indicadores utilizados")
 st.subheader("Descripción de los indicadores utilizados")
 with st.container(border=True):
-    st.dataframe(desc_ind)
-    st.subheader("Código ejecutado")
-    col5,col6 = st.columns(2)
-    with col5:
-        st.code(body= """
-desc_ind = dim_indicador.join(fct_indicador, how="inner", on="indicador_key")
+    tabla_desc = (
+        fct_indicador
+        .join(dim_fecha, on="date_key", how="left")
+        .join(dim_indicador, on="indicador_key", how="left")
+        .select([
+            pl.col("codigo_indicador").alias("Código de indicador").str.to_integer(),
+            pl.col("nombre_indicador").alias("Nombre de indicador"),
+            pl.col("descripcion_indicador").alias("Descripción de indicador"),
+            pl.col("periodicidad").alias("Periodicidad"),
+            pl.col("valorind").alias("Valor de Indicador"),
+            pl.col("fecha").alias("Fecha de emisión"),
+        ])
+        .filter(pl.col("Nombre de indicador") == select_box)
 
-desc_ind = desc_ind.filter(
-    pl.col("nombre_indicador").is_in(["Bienes y servicios",
-                                        "Ingreso primario",
-                                        "Ingreso secundario"])
-                                        )
-""", language="python"
-            )
-    with col6:
-        st.code(
-            body= """
-select
-	fct.indicador_key,
-	fct.valorind,
-	dim.indicador_key,
-	dim.nombre_indicador,
-	dim.descripcion_indicador,
-	dim.periodicidad
-from fct_indicador fct
-left join dim_indicador dim
-	on fct.indicador_key = dim.indicador_key;
-""", language="sql"
-        )
+        .sort("Fecha de emisión", descending=True)
+    )
+    st.header("Gráficos")
+    st.header("valor del indicador")
+    fig = px.line(
+        tabla_desc,
+        x= "Fecha de emisión",
+        y="Valor de Indicador"
+    )
+
+    st.plotly_chart(fig)
+
+
+
+    st.subheader("Descargue los datos")
+    st.dataframe(tabla_desc)
+
 
 
 st.header("Balance de la cuenta corriente: Suma de los indicadores por trimestre")
