@@ -10,3 +10,4 @@ pandera[polars]
 SQLAlchemy
 psycopg2
 connectorx
+streamlit
