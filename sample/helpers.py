@@ -5,20 +5,31 @@
 # Descripción del archivo: funciones complejas y/o específicas
 # ----------------------------------------------------------------
 
-import polars as pl
-import pandera.polars as pa
+import streamlit as st
+import polars as pl 
 
-data = pl.read_excel("report.xlsx", columns=[0,7,8,9])
+# -- CLASE PARA CREAR CONEXION Y LUEGO TRAER LAS TABLAS DE LOS QUERIES
+# PARAMETROS DE LA CLASE TIENEN QUE SER 
 
-schema = pa.DataFrameSchema({
-    "codigo": pa.Column(str),
-    "fecha_inicio": pa.Column(str),
-    "fecha_final": pa.Column(str),
-    "watermark": pa.Column(str)
-})
+class postgresqlConn:
+    """
+    Clase que se encarga de crear la conexión con la base de datos y ejecutar los queries suministrados.
+    
+    ...
 
-try:
-    validated_data = schema.validate(data)
-    print("Validación exitosa")
-except pa.errors.SchemaError as e:
-    print(f"Validación fallida: {e}")
+    Atributos
+    ----------
+
+    
+    Métodos
+    ----------
+
+    postgresqlConn.query()
+        Ejecuta el query suministrado
+    """
+
+    def __init__(self):
+        self.conn = st.connection("postgresql",type="sql")
+
+    def _read_sql(self, sql_path: str) -> str:
+        """Lee el archivo SQL y retorna su contenido como texto"""    
