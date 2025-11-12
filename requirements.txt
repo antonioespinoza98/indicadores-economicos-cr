@@ -11,3 +11,5 @@ SQLAlchemy
 psycopg2
 connectorx
 streamlit
+streamlit[charts]
+plotly

@@ -15,7 +15,7 @@ def logger(filename: str, log_file: str) -> logging.Logger:
 
     if not logger.handlers:
         file_handler =logging.FileHandler(log_file, encoding= 'utf-8')
-        file_handler.setLevel(logging.WARNING)
+        file_handler.setLevel(logging.DEBUG)
 
         stream_handler = logging.StreamHandler()
         stream_handler.setLevel(logging.INFO)

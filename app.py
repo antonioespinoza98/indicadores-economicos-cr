@@ -35,24 +35,15 @@ BalanzaDePagosTrim =(
 
 
 
-q= "SELECT * FROM curado_sch.fct_indicador"
-q1= "SELECT * FROM curado_sch.dim_indicador"
+q1= "SELECT * FROM curado_sch.mrt_indicadores_disp"
 uri = "postgresql://mespinoza:mespinoza@127.0.0.1:5433/crudo_db"
 
-fct_indicador= pl.read_database_uri(query=q, uri=uri, engine='connectorx')
-dim_indicador= pl.read_database_uri(query=q1, uri=uri, engine='connectorx')
+mrt_indicadores_disp= pl.read_database_uri(query=q1, uri=uri, engine='connectorx')
 
+# ---- NUEVOS QUERIES
 
-mrt_cuenta_ind = (
-    fct_indicador.join(
-        other=dim_indicador,
-        on="indicador_key",
-        how="left"
-    )
-    .select("nombre_indicador")
-    .unique()
-    .to_series()
-)
+q= "SELECT * FROM curado_sch.mrt_cuenta_ind"
+mrt_cuenta_ind= pl.read_database_uri(query=q, uri=uri, engine='connectorx').to_series()
 
 # ---
 st.title("Indicadores Económicos")
@@ -66,20 +57,7 @@ st.header("Indicadores utilizados")
 st.subheader("Descripción de los indicadores utilizados")
 with st.container(border=True):
     tabla_desc = (
-        fct_indicador
-        .join(dim_fecha, on="date_key", how="left")
-        .join(dim_indicador, on="indicador_key", how="left")
-        .select([
-            pl.col("codigo_indicador").alias("Código de indicador").str.to_integer(),
-            pl.col("nombre_indicador").alias("Nombre de indicador"),
-            pl.col("descripcion_indicador").alias("Descripción de indicador"),
-            pl.col("periodicidad").alias("Periodicidad"),
-            pl.col("valorind").alias("Valor de Indicador"),
-            pl.col("fecha").alias("Fecha de emisión"),
-        ])
-        .filter(pl.col("Nombre de indicador") == select_box)
-
-        .sort("Fecha de emisión", descending=True)
+        mrt_indicadores_disp.filter(pl.col("Nombre de indicador") == select_box).sort("Fecha de emisión", descending=True)
     )
     st.header("Gráficos")
     st.header("valor del indicador")
