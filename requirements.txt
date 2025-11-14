@@ -13,3 +13,4 @@ connectorx
 streamlit
 streamlit[charts]
 plotly
+streamlit-navigation-bar

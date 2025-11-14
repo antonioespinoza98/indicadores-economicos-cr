@@ -59,5 +59,16 @@ class database_conn:
             connection=_self.alchemy_conn
         )
         return data
+    
+    @st.cache_data
+    def load_lista_salarios(_self):
+        q = """
+            SELECT *
+            FROM curado_sch.lista_salarios;
+        """
+
+        return pl.read_database(
+            query=q,
+            connection=_self.alchemy_conn)     
 
 

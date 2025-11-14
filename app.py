@@ -1,41 +1,17 @@
 import streamlit as st
-import plotly.express as px
-from sample.helpers import database_conn
-
-st.set_page_config(layout="wide")
+from st_pages import add_page_title, get_nav_from_toml
 
 
-#-- CONEXION BASE DE DATOS
-conn = database_conn()
+st.set_page_config(layout="wide",
+                   initial_sidebar_state="collapsed")
 
 
-indicadores = conn.load_indicadores()
+nav = get_nav_from_toml(".streamlit/pages.toml")
 
-select_box = st.selectbox(
-    "Seleccione una tabla para visualizar",
-    options=indicadores,
-)
+st.logo("./docs/img/logo.png", size="large")
 
-mrt_indicadores_disp = conn.load_indicador_data(select_box)
+pg = st.navigation(nav)
 
-st.header("Indicadores utilizados")
-st.subheader("Descripción de los indicadores utilizados")
+add_page_title(pg)
 
-with st.container(border=True):
-    # Already sorted in SQL, but sort again if you want to be extra sure
-    tabla_desc = mrt_indicadores_disp.sort("Fecha de emisión", descending=True)
-
-    st.header("Gráficos")
-    st.subheader("Valor del indicador")
-
-    # Plotly is happier with pandas:
-    fig = px.line(
-        tabla_desc.to_pandas(),
-        x="Fecha de emisión",
-        y="Valor de Indicador",
-        title=select_box,
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.subheader("Descargue los datos")
-    st.dataframe(tabla_desc)
+pg.run()
