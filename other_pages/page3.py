@@ -1,5 +1,16 @@
+# -------------------------------------------------------------------------------------
+#  Autor: Marco Espinoza — Consultor 
+# Laboratorio de Prospectiva, Innovación e Inteligencia Artificial
+# Fecha: 29-09-2025
+# Descripción del archivo: Tercera página del Streamlit, información sobre la app
+# -------------------------------------------------------------------------------------
+
+# -- importamos las dependencias
+
 import streamlit as st
 
+
+# -- Cuerpo de la página
 st.markdown("""
 Esta aplicación ha sido diseñada para facilitar el acceso, consulta y análisis de **indicadores económicos** y **datos oficiales** publicados por instituciones públicas de Costa Rica.  
 Su objetivo es ofrecer una herramienta sencilla, visual e interactiva que permita a estudiantes, investigadores, analistas, desarrolladores, periodistas y público en general explorar información económica de forma rápida y clara.

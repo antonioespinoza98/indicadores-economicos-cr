@@ -1,5 +1,14 @@
+# -------------------------------------------------------------------------------------
+#  Autor: Marco Espinoza — Consultor 
+# Laboratorio de Prospectiva, Innovación e Inteligencia Artificial
+# Fecha: 29-09-2025
+# Descripción del archivo: Página inicial de Streamlit
+# -------------------------------------------------------------------------------------
+
+# -- Importamos las dependencias
 import streamlit as st
 
+# -- Cuerpo de la aplicación --
 
 # Subtítulo corto
 st.subheader("Consulta indicadores del BCCR y la lista oficial de salarios mínimos del MTSS")
@@ -11,8 +20,6 @@ Aquí puedes explorar, visualizar y descargar datos económicos oficiales de Cos
 """)
 
 st.markdown("---")
-
-# ¿Qué puedes hacer aquí?
 st.header("¿Qué puedes hacer en esta aplicación?")
 
 col1, col2 = st.columns(2)
@@ -36,7 +43,7 @@ with col2:
 
 st.markdown("---")
 
-# Cómo usar la app
+# Instrucción general de cómo usar la app
 st.header("Cómo empezar")
 
 st.markdown("""

@@ -1,10 +1,23 @@
+# -------------------------------------------------------------------------------------
+#  Autor: Marco Espinoza — Consultor 
+# Laboratorio de Prospectiva, Innovación e Inteligencia Artificial
+# Fecha: 29-09-2025
+# Descripción del archivo: Segunda página del Streamlit, indicadores
+# -------------------------------------------------------------------------------------
+
+# -- Primero se importan las dependencias
 import streamlit as st 
 import plotly.express as px
-from sample.helpers import database_conn
+from sample.helpers import database_conn # -- Traemos esta clase que establece la conexión con la base de datos
 import polars as pl
+# --
+
+# -- Cuerpo del código
+
 #-- CONEXION BASE DE DATOS
 conn = database_conn()
 
+# Creamos dos tabs para cada uno de los indicadores
 tab1, tab2 = st.tabs(["Indicadores - BCCR","Lista de Salarios - MTSS"])
 
 with tab1:
@@ -20,7 +33,7 @@ with tab1:
         with col2:
             st.image("./docs/img/bccr.svg")
 
-    # Cargamos los indicadores
+    # Cargamos la lista indicadores
     indicadores = conn.load_indicadores()
 
     st.header("Indicadores")
@@ -29,13 +42,15 @@ with tab1:
         "Seleccione un indicador para comenzar",
         options=indicadores,
     )
+    # -- Filtramos la base de datos de acuerdo a la selección, esta forma es más sencilla
+    # -- Ya que traer la tabla completa en un query no es muy eficiente
 
     mrt_indicadores_disp = conn.load_indicador_data(select_box)
 
     with st.container(border=True):
-        # Already sorted in SQL, but sort again if you want to be extra sure
         tabla_desc = mrt_indicadores_disp.sort("Fecha de emisión", descending=True)
 
+        # -- Algunas transformaciones utilizando la libreria de Polars
         result = (
             tabla_desc.select(
                 pl.col("Nombre de indicador").first().alias("indicador"),
@@ -44,21 +59,22 @@ with tab1:
                 pl.col("Periodicidad").first().alias("periodicidad")
                 )
                 ).to_dicts()[0]
-        
+        # -- Título dinámico del gráfico
         st.subheader(
             f"{result['indicador']}: Serie {result['periodicidad']} {result['min_date'].strftime('%d/%m/%Y')} — {result['max_date'].strftime('%d/%m/%Y')}"
         )
         st.markdown("Unidad de medida: Colón Costarricense")
-        # Plotly is happier with pandas:
         fig = px.line(
             tabla_desc.to_pandas(),
             x="Fecha de emisión",
             y="Valor de Indicador",
             markers=True
         )
-        st.plotly_chart(fig, use_container_width=True)
+        # Presentamos el grafico
+        st.plotly_chart(fig, width='stretch')
 
 
+    # Sección para la descarga de los datos
     st.subheader("Descargue los datos")
     with st.container(border=True):
         st.markdown("""
@@ -77,6 +93,7 @@ with tab2:
         with col2:
             st.image("./docs/img/MTSS_logo.png")
 
+        # Un menu desplegable que permite ver los detalles de la tabla de la lista de salarios
         with st.expander("Ver siglas y salarios mínimos"):
             st.markdown("""
             **TONC**  - Trabajador en Ocupación No Calificada - ₡12 236,95  
