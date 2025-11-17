@@ -211,3 +211,5 @@ tokens.txt
 *.ini
 
 /BCCR-tracking
+
+.streamlit/
