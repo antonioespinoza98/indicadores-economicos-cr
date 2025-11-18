@@ -99,7 +99,7 @@ class database_conn:
                 query=q,
                 connection=_self.alchemy_conn
             )
-            get_logger("Query ejecutado correctamente.")
+            get_logger.debug("Query ejecutado correctamente.")
         except Exception as err:
             get_logger.error(f"Error inesperado: {err=} {type(err)=}")
             raise
