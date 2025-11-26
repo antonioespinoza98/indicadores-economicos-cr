@@ -118,7 +118,7 @@ class dailyorchestrator:
                     indicador=indicador,
                     fecha_inicio=fecha_inicio,
                     fecha_final=fecha_final,
-                ).read_as_dataframe()
+                ).get()
 
                 # Aseguramos que sea un DataFrame de Polars
                 df = pl.DataFrame(result)
