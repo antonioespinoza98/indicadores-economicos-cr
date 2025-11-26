@@ -118,12 +118,29 @@ class database_conn:
             data=pl.read_database(
                 query=q,
                 connection=_self.alchemy_conn)
-            get_logger("Query ejecutado correctamente.")
+            get_logger.debug("Query ejecutado correctamente.")
         except Exception as err:
             get_logger.error(f"Error inesperado: {err=} {type(err)=}")
             raise
  
         
-        return data      
+        return data
 
+class PostgreSQLconn:
+    """
+    Docstring for PostgreSQLconn
+    """
+    def __init__(self):        
+        load_dotenv()
+
+        self.url = os.getenv("SQL_URL")
+        
+    def create_conn(self):
+        engine = create_engine(
+            url=self.url
+        )
+        alchemy_conn = engine.connect()
+        get_logger.debug("Credenciales cargados con éxito.")
+
+        return alchemy_conn
 
