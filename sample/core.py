@@ -142,8 +142,8 @@ class BccrAPI:
         url,
         params=None,
         timeout=None,
-        max_retries: int = 2,         # menos reintentos
-        base_delay: float = 60.0,     # esperas más largas
+        max_retries: int = 3,         # menos reintentos
+        base_delay: float = 20.0,     # esperas más largas
     ):
         to = self.timeout if timeout is None else timeout
         last_status = None

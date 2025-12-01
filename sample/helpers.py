@@ -88,7 +88,7 @@ class database_conn:
         # Query.
         q = f"""
             SELECT *
-            FROM curado_sch.mrt_indicadores_disp
+            FROM mart_sch.mrt_indicadores_disp
             WHERE "Código de indicador" = '{code}'
             AND "Nombre de indicador" = '{name_safe}'
             ORDER BY "Fecha de emisión" DESC;

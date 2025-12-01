@@ -1,11 +1,10 @@
 # -------------------------------------------------------------------------------------
 #  Autor: Marco Espinoza — Consultor 
 # Laboratorio de Prospectiva, Innovación e Inteligencia Artificial
-# Fecha: 29-11-2025
-# Descripción del archivo: Orquestador para la extracción de datos diarios
+# Fecha: 27-11-2025
+# Descripción del archivo: Orquestador para la extracción de datos mensuales
 # -------------------------------------------------------------------------------------
 
-# ======== Librerias ========
 import polars as pl
 import uuid
 from sample.core import BccrAPI 
@@ -15,28 +14,19 @@ from sample.helpers import PostgreSQLconn
 import time
 from sample.core import BccrRateLimitError
 
-# ======== LOGGER para los errores ========
 get_logger=logger("orquestador","orquestador.log")
 
-class dailyorchestrator:
+class monthlyorchestrator:
     """
-    Orquestador de la extracción de datos que se actualizan diario.
+    Orquestador de la extracción de datos que se actualizan mensualmente.
 
     ...
     Atributos
     ----------
 
-
     Métodos
     ----------
-    orchConn = dailyorchestrator()
-        Abre la conexión
-    orchConn.readData()
-        Abre la base de datos de acuerdo al query con los indicadores que deben actualizarse diariamente.
-    orchConn.TidyHob()
-        Devuelve los indicadores con las fechas nuevas por actualizarse.
-    orchConn.run()
-        Corre la actualización de los indicadores.
+
     """
     def __init__(self):
         self.conn = PostgreSQLconn()
@@ -45,16 +35,16 @@ class dailyorchestrator:
 
     def readData(self) -> pl.DataFrame:
         """
-        Lee la base de datos de acuerdo al query estipulado en la carpeta del orquestador.
-        Devuelve los indicadores que se deben actualizar diariamente. 
+        Docstring for engine
+        
+        :param self: Description
         """
-
         # Leemos el archivo predeterminado para el query
         with open("./orquestador/sql/query.sql", "r") as f:
             query = f.read()
 
-        # determinamos la cadencia, en este caso diaria
-        cadence = "Diaria"
+        # determinamos la cadencia, en este caso mensual
+        cadence = "Mensual"
 
         # leemos el query y le damos el formato con la cadencia 
         query = query.format(CADENCE=cadence)
@@ -68,15 +58,14 @@ class dailyorchestrator:
 
     def TidyJob(self):
         """
-        Ingresa la cantidad de indicadores que se deben de actualizar en los logs, 
-        devuelve el DataFrame final con las fechas actualizadas de consulta. 
+        Docstring for TidyJob
         
         :param self: Description
         """
 
         data = self.readData()
 
-        # La siguiente transformación nos dice cuantos indicadores hay en lista que son diarios
+        # La siguiente transformación nos dice cuantos indicadores hay en lista que son mensuales
         t_df = data.select(
             pl.col("codigo_indicador")
             .unique()
@@ -85,13 +74,13 @@ class dailyorchestrator:
         )
 
         t = t_df.select(pl.col("TotalIndicadores")).item()
-        get_logger.debug(f"En la lista existen: {t} indicadores con cadencia diaria por actualizarse.")
+        get_logger.debug(f"En la lista existen: {t} indicadores con cadencia mensual por actualizarse.")
 
-        ind_diarios = (
+        ind_mensual = (
             data
             .with_columns(
                 (pl.col("ultima_version") + pl.duration(days=1)).alias("fecha_inicio"), # Agregamos un dia a la fecha de inicio basado en la ultima version
-                (pl.col("ultima_version") + pl.duration(weeks=12)).alias("fecha_final"), # Agregamos 12 semanas a esta misma fecha
+                (pl.col("ultima_version") + pl.duration(weeks=5)).alias("fecha_final"), # Agregamos 12 semanas a esta misma fecha
                 )
             .select(
                 pl.col("codigo_indicador"),
@@ -101,13 +90,13 @@ class dailyorchestrator:
             .sort("codigo_indicador", descending=False)
             )
         
-        return ind_diarios
+        return ind_mensual
     
     def run(self):
         """
-        Corre el trabajo de extraer los indicadores y almacenarlos en la base de datos
-        transaccional de PostgreSQL. 
+        Docstring for run
         
+        :param self: Description
         """
 
         data= self.TidyJob()
@@ -168,7 +157,7 @@ class dailyorchestrator:
 
             except BccrRateLimitError as e:
                 get_logger.error("Rate limit agotado para %s: %s", indicador, e)
-                time.sleep(10)
+                time.sleep(60)
                 continue
 
             except Exception as e:
