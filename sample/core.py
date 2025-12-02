@@ -14,6 +14,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 from typing import Any, Dict, Optional
 import polars as pl
+from sample.helpers import PostgreSQLconn
 from datetime import datetime
 from uuid import uuid4
 import json
@@ -65,6 +66,8 @@ class BccrAPI:
         self.indicador = indicador
         self.fecha_inicio = fecha_inicio
         self.fecha_final = fecha_final
+        self.conn= PostgreSQLconn()
+        self.engine=self.conn.create_conn()
 
         # Shared HTTP session
         self.session = session or BccrAPI.SESSION
@@ -297,9 +300,9 @@ class BccrAPI:
             if df.height > 0:
                 df.write_database(
                     table_name="bccr_sch.indicador_crudo",
-                    connection="postgresql://mespinoza:mespinoza@127.0.0.1:5433/crudo_db",
-                    if_table_exists='append',
-                    engine='sqlalchemy'
+                    connection=self.engine,
+                    if_table_exists='append'
+                    # engine='sqlalchemy'
                 )
                 get_logger.info("Escritura completada: %d filas en indicador_crudo", df.height)
             else:

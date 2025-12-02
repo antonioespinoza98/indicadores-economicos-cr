@@ -91,7 +91,7 @@ class dailyorchestrator:
             data
             .with_columns(
                 (pl.col("ultima_version") + pl.duration(days=1)).alias("fecha_inicio"), # Agregamos un dia a la fecha de inicio basado en la ultima version
-                (pl.col("ultima_version") + pl.duration(weeks=12)).alias("fecha_final"), # Agregamos 12 semanas a esta misma fecha
+                (pl.col("ultima_version") + pl.duration(weeks=1)).alias("fecha_final"), # Agregamos 1 semana a esta misma fecha
                 )
             .select(
                 pl.col("codigo_indicador"),
