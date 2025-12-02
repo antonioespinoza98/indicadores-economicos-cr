@@ -1,8 +1,8 @@
 # -------------------------------------------------------------------------------------
 #  Autor: Marco Espinoza — Consultor 
 # Laboratorio de Prospectiva, Innovación e Inteligencia Artificial
-# Fecha: 27-11-2025
-# Descripción del archivo: Orquestador para la extracción de datos semanales
+# Fecha: 02-12-2025
+# Descripción del archivo: Orquestador para la extracción de datos anuales
 # -------------------------------------------------------------------------------------
 
 import polars as pl
@@ -16,9 +16,9 @@ from sample.core import BccrRateLimitError
 
 get_logger=logger("orquestador","orquestador.log")
 
-class weeklyorchestrator:
+class yearlyorchestrator:
     """
-    Orquestador de la extracción de datos que se actualizan semanalmente.
+    Orquestador de la extracción de datos que se actualizan anualmente.
 
     ...
     Atributos
@@ -43,8 +43,8 @@ class weeklyorchestrator:
         with open("./orquestador/sql/query.sql", "r") as f:
             query = f.read()
 
-        # determinamos la cadencia, en este caso semanal
-        cadence = "Semanal"
+        # determinamos la cadencia, en este caso anual
+        cadence = "Anual"
 
         # leemos el query y le damos el formato con la cadencia 
         query = query.format(CADENCE=cadence)
@@ -65,7 +65,7 @@ class weeklyorchestrator:
 
         data = self.readData()
 
-        # La siguiente transformación nos dice cuantos indicadores hay en lista que son semanales
+        # La siguiente transformación nos dice cuantos indicadores hay en lista que son anuales
         t_df = data.select(
             pl.col("codigo_indicador")
             .unique()
@@ -74,13 +74,13 @@ class weeklyorchestrator:
         )
 
         t = t_df.select(pl.col("TotalIndicadores")).item()
-        get_logger.debug(f"En la lista existen: {t} indicadores con cadencia semanal por actualizarse.")
+        get_logger.debug(f"En la lista existen: {t} indicadores con cadencia anual por actualizarse.")
 
-        ind_semana = (
+        ind_trim = (
             data
             .with_columns(
                 (pl.col("ultima_version") + pl.duration(days=1)).alias("fecha_inicio"), # Agregamos un dia a la fecha de inicio basado en la ultima version
-                (pl.col("ultima_version") + pl.duration(weeks=12)).alias("fecha_final"), # Agregamos 12 semanas a esta misma fecha
+                (pl.col("ultima_version") + pl.duration(weeks=53)).alias("fecha_final"), # Agregamos 14 semanas a esta misma fecha
                 )
             .select(
                 pl.col("codigo_indicador"),
@@ -90,7 +90,7 @@ class weeklyorchestrator:
             .sort("codigo_indicador", descending=False)
             )
         
-        return ind_semana
+        return ind_trim
     
     def run(self):
         """
@@ -157,10 +157,10 @@ class weeklyorchestrator:
 
             except BccrRateLimitError as e:
                 get_logger.error("Rate limit agotado para %s: %s", indicador, e)
-                time.sleep(20)
+                time.sleep(10)
                 continue
 
             except Exception as e:
                 get_logger.error("Error con %s: %s", indicador, e)
             
-            time.sleep(5)
+            time.sleep(10)
